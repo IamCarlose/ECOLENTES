@@ -1,0 +1,18 @@
+[project]
+name = "ecolentes-os"
+version = "4.0.0"
+description = "Ecolentes Industrial OS - Stunning Series"
+readme = "README.md"
+requires-python = ">=3.8"
+dependencies = [
+    "customtkinter",
+    "matplotlib",
+    "pillow",
+]
+
+[project.scripts]
+app = "main:main"
+
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"

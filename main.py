@@ -124,9 +124,12 @@ class EcolentesStunningOS(ctk.CTk):
     def open_hildegard(self):
         self.show_module("hildegard", HildegardModule, self.db)
 
-if __name__ == "__main__":
+def main():
     app = EcolentesStunningOS()
     # Smooth Entry Effect (Simulated via initial update)
     app.update()
     app.attributes('-alpha', 0.98) # Stunning subtle transparency
     app.mainloop()
+
+if __name__ == "__main__":
+    main()
