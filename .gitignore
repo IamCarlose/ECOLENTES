@@ -1,0 +1,27 @@
+# Database
+*.db
+
+# Python
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+.Python
+env/
+venv/
+pip-log.txt
+pip-delete-this-directory.txt
+
+# Reports
+*.pdf
+*.xlsx
+
+# Environment
+.env
+
+# Project specific
+scratch/
+test_report.xlsx
+implementation_plan.md
+task.md
+walkthrough.md
