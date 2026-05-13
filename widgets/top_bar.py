@@ -1,5 +1,7 @@
 import customtkinter as ctk
+from PIL import Image
 from app_config import *
+import os
 import sys
 
 class TopBar(ctk.CTkFrame):
@@ -9,8 +11,16 @@ class TopBar(ctk.CTkFrame):
         self.on_logout = on_logout
         
         # Logo Icon
-        self.logo_lbl = ctk.CTkLabel(self, text="ECOLENTES SYSTEM", font=("Segoe UI", 12, "bold"), text_color=ACCENT_GREEN)
-        self.logo_lbl.pack(side="left", padx=25)
+        if os.path.exists(LOGO_IMG):
+            logo_pil = Image.open(LOGO_IMG)
+            self.logo_img = ctk.CTkImage(logo_pil, size=(80, 40))
+            self.logo_icon = ctk.CTkLabel(self, image=self.logo_img, text="")
+            self.logo_icon.pack(side="left", padx=(25, 10))
+            self.logo_lbl = ctk.CTkLabel(self, text="ECOLENS APP", font=("Segoe UI", 12, "bold"), text_color=ACCENT_GREEN)
+            self.logo_lbl.pack(side="left")
+        else:
+            self.logo_lbl = ctk.CTkLabel(self, text="ECOLENS APP", font=("Segoe UI", 12, "bold"), text_color=ACCENT_GREEN)
+            self.logo_lbl.pack(side="left", padx=25)
         
         # User Badge
         self.user_lbl = ctk.CTkLabel(self, text=f"OPERADOR: {user_name.upper()}", font=("Segoe UI", 10), text_color=TEXT_S)

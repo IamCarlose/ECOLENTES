@@ -1,4 +1,5 @@
 import customtkinter as ctk
+from PIL import Image
 from app_config import *
 from database import DatabaseManager
 from widgets.top_bar import TopBar
@@ -8,13 +9,14 @@ from modules.dashboard import DashboardModule
 from modules.smed_doe import SMEDModule, DOEModule
 from modules.spaghetti import SpaghettiModule
 from modules.hildegard import HildegardModule
+from modules.monitoring import MonitoringModule
 
 class EcolentesStunningOS(ctk.CTk):
     def __init__(self):
         super().__init__()
 
         # --- CORE SETUP ---
-        self.title("Ecolentes OS v4.0 - Stunning Industrial Series")
+        self.title("Ecolens App")
         self.geometry("1450x900")
         self.configure(fg_color=BG_MAIN)
         setup_branding_theme()
@@ -57,7 +59,14 @@ class EcolentesStunningOS(ctk.CTk):
         self.side.pack_propagate(False)
         
         # Logo Label in Sidebar
-        ctk.CTkLabel(self.side, text="ECOLENTES OS 4.0", font=("Segoe UI", 24, "bold"), text_color=TEXT_P).pack(pady=(40, 5))
+        if os.path.exists(LOGO_IMG):
+            logo_pil = Image.open(LOGO_IMG)
+            # Maxed out size for sidebar (width 280)
+            self.logo_img = ctk.CTkImage(logo_pil, size=(270, 135))
+            ctk.CTkLabel(self.side, image=self.logo_img, text="").pack(pady=(40, 10))
+        else:
+            ctk.CTkLabel(self.side, text="ECOLENS APP", font=("Segoe UI", 24, "bold"), text_color=TEXT_P).pack(pady=(40, 5))
+            
         ctk.CTkLabel(self.side, text="— QUALITY ASSURANCE —", font=("Segoe UI", 9, "bold"), text_color=ACCENT_GREEN).pack(pady=(0, 40))
         
         # Nav Map
@@ -73,10 +82,13 @@ class EcolentesStunningOS(ctk.CTk):
                               text_color=TEXT_P, anchor="w", height=55, hover_color=PANEL_BG, corner_radius=0, command=func)
             b.pack(fill="x")
 
-        if self.u_role == "Ingeniero":
-            b = ctk.CTkButton(self.side, text="🧪  ENGINEERING DOE", font=("Segoe UI", 12, "bold"), fg_color="transparent", 
+        if self.u_role in ["Ingeniero", "Supervisor"]:
+            b = ctk.CTkButton(self.side, text="🧪  ESTADÍSTICA / DOE", font=("Segoe UI", 12, "bold"), fg_color="transparent", 
                               text_color=TEXT_P, anchor="w", height=55, hover_color=PANEL_BG, corner_radius=0, command=self.open_doe)
             b.pack(fill="x")
+            b_mon = ctk.CTkButton(self.side, text="🖥️  MONITOREO AVANZADO", font=("Segoe UI", 12, "bold"), fg_color="transparent", 
+                                  text_color=TEXT_P, anchor="w", height=55, hover_color=PANEL_BG, corner_radius=0, command=self.open_monitoring)
+            b_mon.pack(fill="x")
 
         # Global Gauge (Lower Sidebar)
         g_box = ctk.CTkFrame(self.side, fg_color=PANEL_BG, corner_radius=20, height=250)
@@ -119,10 +131,13 @@ class EcolentesStunningOS(ctk.CTk):
         self.show_module("spaghetti", SpaghettiModule, self.db, uid)
 
     def open_doe(self):
-        self.show_module("doe", DOEModule)
+        self.show_module("doe", DOEModule, self.db)
 
     def open_hildegard(self):
         self.show_module("hildegard", HildegardModule, self.db)
+
+    def open_monitoring(self):
+        self.show_module("monitoring", MonitoringModule, self.db)
 
 def main():
     app = EcolentesStunningOS()

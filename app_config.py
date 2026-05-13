@@ -15,11 +15,16 @@ ACCENT_GOLD = "#F59E0B"  # Industrial Gold (Warning)
 
 # --- ASSETS ---
 BASE_DIR = os.path.dirname(os.path.abspath(__file__))
-LOGO_IMG = os.path.join(BASE_DIR, "logo_clean.png")
+LOGO_IMG = os.path.join(BASE_DIR, "Ecolens App Logo Transparent.png")
 
 # --- BUSINESS LOGIC ---
 STANDARD_TIME = 15.0
 ANDON_THRESHOLD = 1.25 # 25% extra for bold alerts
+
+# --- SPC CONFIGURATION (Filament Diameter) ---
+NOMINAL_DIAMETER = 1.75
+USL_DIAMETER = 1.80 # Upper Specification Limit
+LSL_DIAMETER = 1.70 # Lower Specification Limit
 
 def setup_branding_theme():
     ctk.set_appearance_mode("Light")

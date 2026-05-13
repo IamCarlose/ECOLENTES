@@ -14,48 +14,23 @@ class HildegardModule(ctk.CTkFrame):
         self.grid_rowconfigure(0, weight=1)
         
         # 1. MONITORING PANEL (LEFT)
-        self.mon_p = ctk.CTkFrame(self, fg_color=PANEL_BG, corner_radius=25, border_width=1, border_color="#E2E8F0")
+        self.mon_p = ctk.CTkScrollableFrame(self, fg_color=PANEL_BG, corner_radius=25, border_width=1, border_color="#E2E8F0")
         self.mon_p.grid(row=0, column=0, padx=10, pady=10, sticky="nsew")
         
-        ctk.CTkLabel(self.mon_p, text="HILDEGARD 2.0 CONTROL", font=("Segoe UI", 20, "bold"), text_color=TEXT_P).pack(pady=(30, 5))
-        ctk.CTkLabel(self.mon_p, text="Termoformado & Rapidez Industrial", font=("Segoe UI", 11), text_color=TEXT_S).pack(pady=(0, 20))
+        ctk.CTkLabel(self.mon_p, text="HILDEGARD Industrial Data", font=("Segoe UI", 20, "bold"), text_color=TEXT_P).pack(pady=(30, 5))
+        ctk.CTkLabel(self.mon_p, text="Toma de Datos Modular", font=("Segoe UI", 11), text_color=TEXT_S).pack(pady=(0, 20))
         
-        # --- TECHNICAL DATA INPUT (Temp/Pressure) ---
-        self.tech_f = ctk.CTkFrame(self.mon_p, fg_color=BG_MAIN, corner_radius=20)
-        self.tech_f.pack(fill="x", padx=30, pady=10)
-        
-        ctk.CTkLabel(self.tech_f, text="CONDICIONES DEL TERMOFORMADOR", font=("Segoe UI", 12, "bold"), text_color=ACCENT_BLUE).pack(pady=10)
-        
-        self.inp_row1 = ctk.CTkFrame(self.tech_f, fg_color="transparent")
-        self.inp_row1.pack(fill="x", padx=20, pady=10)
-        
-        self.ent_t = ctk.CTkEntry(self.inp_row1, placeholder_text="Temp (°C)", height=40, font=("Segoe UI", 12))
-        self.ent_t.pack(side="left", fill="x", expand=True, padx=5)
-        
-        self.ent_p = ctk.CTkEntry(self.inp_row1, placeholder_text="Presión (PSI)", height=40, font=("Segoe UI", 12))
-        self.ent_p.pack(side="left", fill="x", expand=True, padx=5)
-        
-        self.btn_save_tech = ctk.CTkButton(self.tech_f, text="💾 CARGAR Tº / P", fg_color=ACCENT_BLUE, text_color=BG_MAIN, 
-                                          font=("Segoe UI", 11, "bold"), height=40, command=self.save_tech)
-        self.btn_save_tech.pack(pady=(0, 15), padx=25, fill="x")
+        # --- INPUTS ---
+        # Temp Input
+        self.temp_f = self.create_input_section(self.mon_p, "CONTROL DE TEMPERATURA", ACCENT_BLUE, "Temp (°C)", self.save_temp)
+        # Pressure Input
+        self.press_f = self.create_input_section(self.mon_p, "CONTROL DE PRESIÓN", ACCENT_GOLD, "Presión (PSI)", self.save_pressure)
+        # RPM Input
+        self.rpm_f = self.create_input_section(self.mon_p, "CONTROL DE RPM / RAPIDEZ", ACCENT_GREEN, "RPM / m/min", self.save_rpm)
+        # Diameter Input
+        self.diam_f = self.create_input_section(self.mon_p, "CONTROL DE DIÁMETRO", ACCENT_STEEL, "Diám (mm)", self.save_quick_diameter)
 
-        # --- SPEED DATA INPUT ---
-        self.speed_f = ctk.CTkFrame(self.mon_p, fg_color=BG_MAIN, corner_radius=20)
-        self.speed_f.pack(fill="x", padx=30, pady=10)
-        
-        ctk.CTkLabel(self.speed_f, text="CONTROL DE RAPIDEZ DE PRODUCCIÓN", font=("Segoe UI", 12, "bold"), text_color=ACCENT_GREEN).pack(pady=10)
-        
-        self.inp_row2 = ctk.CTkFrame(self.speed_f, fg_color="transparent")
-        self.inp_row2.pack(fill="x", padx=20, pady=10)
-        
-        self.ent_v = ctk.CTkEntry(self.inp_row2, placeholder_text="Rapidez (m/min)", height=40, font=("Segoe UI", 12))
-        self.ent_v.pack(side="left", fill="x", expand=True, padx=5)
-        
-        self.btn_save_speed = ctk.CTkButton(self.speed_f, text="⚡ REGISTRAR RAPIDEZ", fg_color=ACCENT_GREEN, text_color=BG_MAIN, 
-                                           font=("Segoe UI", 11, "bold"), height=40, command=self.save_speed)
-        self.btn_save_speed.pack(pady=(0, 15), padx=25, fill="x")
-
-        self.btn_clear_all = ctk.CTkButton(self.mon_p, text="🧨 BORRAR HISTORIAL TOTAL", fg_color="transparent", text_color=DANGER_P, 
+        self.btn_clear_all = ctk.CTkButton(self.mon_p, text="🧨 BORRAR HISTORIAL MODULAR", fg_color="transparent", text_color=DANGER_P, 
                                           border_width=1, border_color=DANGER_P, font=("Segoe UI", 10, "bold"), height=30, command=self.clear_all_logs)
         self.btn_clear_all.pack(pady=20)
 
@@ -66,75 +41,150 @@ class HildegardModule(ctk.CTkFrame):
         self.tab_view = ctk.CTkTabview(self.hist_f, fg_color="transparent", segmented_button_selected_color=ACCENT_BLUE)
         self.tab_view.pack(fill="both", expand=True, padx=10, pady=10)
         
-        self.tab_tech = self.tab_view.add("TERMOFORMADO (T/P)")
-        self.tab_speed = self.tab_view.add("RAPIDEZ (V)")
+        self.tab_temp = self.tab_view.add("TEMPERATURA")
+        self.tab_press = self.tab_view.add("PRESIÓN")
+        self.tab_rpm = self.tab_view.add("RPM")
+        self.tab_diam = self.tab_view.add("DIÁMETRO")
         
-        # Technical History List
-        self.scroll_tech = ctk.CTkScrollableFrame(self.tab_tech, fg_color="transparent")
-        self.scroll_tech.pack(fill="both", expand=True)
+        self.scroll_temp = ctk.CTkScrollableFrame(self.tab_temp, fg_color="transparent")
+        self.scroll_temp.pack(fill="both", expand=True)
         
-        # Speed History List
-        self.scroll_speed = ctk.CTkScrollableFrame(self.tab_speed, fg_color="transparent")
-        self.scroll_speed.pack(fill="both", expand=True)
+        self.scroll_press = ctk.CTkScrollableFrame(self.tab_press, fg_color="transparent")
+        self.scroll_press.pack(fill="both", expand=True)
+        
+        self.scroll_rpm = ctk.CTkScrollableFrame(self.tab_rpm, fg_color="transparent")
+        self.scroll_rpm.pack(fill="both", expand=True)
+
+        self.scroll_diam = ctk.CTkScrollableFrame(self.tab_diam, fg_color="transparent")
+        self.scroll_diam.pack(fill="both", expand=True)
         
         self.refresh_all()
 
-    def save_tech(self):
-        try:
-            t, p = float(self.ent_t.get()), float(self.ent_p.get())
-            self.db.log_hildegard(t, p)
-            self.ent_t.delete(0, 'end'); self.ent_p.delete(0, 'end')
-            self.refresh_tech()
-        except ValueError: messagebox.showerror("Error", "Datos de Temp/Presión inválidos")
+    def create_input_section(self, parent, title, color, placeholder, command):
+        frame = ctk.CTkFrame(parent, fg_color=BG_MAIN, corner_radius=20)
+        frame.pack(fill="x", padx=30, pady=10)
+        ctk.CTkLabel(frame, text=title, font=("Segoe UI", 12, "bold"), text_color=color).pack(pady=10)
+        
+        row = ctk.CTkFrame(frame, fg_color="transparent")
+        row.pack(fill="x", padx=20, pady=10)
+        
+        entry = ctk.CTkEntry(row, placeholder_text=placeholder, height=40, font=("Segoe UI", 12))
+        entry.pack(side="left", fill="x", expand=True, padx=5)
+        
+        btn = ctk.CTkButton(frame, text=f"💾 REGISTRAR {title.split()[-1]}", fg_color=color, text_color=BG_MAIN, 
+                            font=("Segoe UI", 11, "bold"), height=40, command=lambda: command(entry))
+        btn.pack(pady=(0, 15), padx=25, fill="x")
+        return entry
 
-    def save_speed(self):
+    def create_dual_input_section(self, parent, title, color, ph1, ph2, command):
+        frame = ctk.CTkFrame(parent, fg_color=BG_MAIN, corner_radius=20)
+        frame.pack(fill="x", padx=30, pady=10)
+        ctk.CTkLabel(frame, text=title, font=("Segoe UI", 12, "bold"), text_color=color).pack(pady=10)
+        
+        row = ctk.CTkFrame(frame, fg_color="transparent")
+        row.pack(fill="x", padx=20, pady=10)
+        
+        entry1 = ctk.CTkEntry(row, placeholder_text=ph1, height=40, font=("Segoe UI", 12))
+        entry1.pack(side="left", fill="x", expand=True, padx=5)
+
+        entry2 = ctk.CTkEntry(row, placeholder_text=ph2, height=40, font=("Segoe UI", 12))
+        entry2.pack(side="left", fill="x", expand=True, padx=5)
+        
+        btn = ctk.CTkButton(frame, text=f"💾 REGISTRAR {title.split()[-1]}", fg_color=color, text_color=BG_MAIN, 
+                            font=("Segoe UI", 11, "bold"), height=40, command=lambda: command(entry1, entry2))
+        btn.pack(pady=(0, 15), padx=25, fill="x")
+        return (entry1, entry2)
+
+    def save_temp(self, entry):
         try:
-            v = float(self.ent_v.get())
-            self.db.log_hildegard_speed(v)
-            self.ent_v.delete(0, 'end')
-            self.refresh_speed()
-        except ValueError: messagebox.showerror("Error", "Dato de Rapidez inválido")
+            val = float(entry.get())
+            self.db.log_temp(val)
+            entry.delete(0, 'end'); self.refresh_temp()
+        except ValueError: messagebox.showerror("Error", "Temperatura inválida")
+
+    def save_pressure(self, entry):
+        try:
+            val = float(entry.get())
+            self.db.log_pressure(val)
+            entry.delete(0, 'end'); self.refresh_press()
+        except ValueError: messagebox.showerror("Error", "Presión inválida")
+
+    def save_rpm(self, entry):
+        try:
+            val = float(entry.get())
+            self.db.log_rpm(val)
+            entry.delete(0, 'end'); self.refresh_rpm()
+        except ValueError: messagebox.showerror("Error", "RPM inválida")
+
+    def save_diameter(self, e1, e2):
+        try:
+            diam = float(e1.get())
+            metraje = float(e2.get())
+            self.db.log_diameter(diam, metraje)
+            e1.delete(0, 'end')
+            e2.delete(0, 'end')
+            self.refresh_diameter()
+        except ValueError: messagebox.showerror("Error", "Valores de diámetro o metraje inválidos")
+
+    def save_quick_diameter(self, entry):
+        try:
+            diam = float(entry.get())
+            self.db.log_diameter(diam, 0.0)
+            entry.delete(0, 'end')
+            self.refresh_diameter()
+        except ValueError: messagebox.showerror("Error", "Valor de diámetro inválido")
 
     def refresh_all(self):
-        self.refresh_tech(); self.refresh_speed()
+        self.refresh_temp(); self.refresh_press(); self.refresh_rpm(); self.refresh_diameter()
 
-    def refresh_tech(self):
-        for widget in self.scroll_tech.winfo_children(): widget.destroy()
-        logs = self.db.get_hildegard_logs()
-        for lid, ts, t, p, notes in logs:
-            row = EntryRow(self.scroll_tech, lid, ts, [t, p], ["°C", "PSI"], self.update_tech, self.delete_tech)
-            row.pack(fill="x", pady=2)
-
-    def refresh_speed(self):
-        for widget in self.scroll_speed.winfo_children(): widget.destroy()
-        logs = self.db.get_hildegard_speed_logs()
+    def refresh_temp(self):
+        for widget in self.scroll_temp.winfo_children(): widget.destroy()
+        logs = self.db.get_temp_logs()
         for lid, ts, v, notes in logs:
-            row = EntryRow(self.scroll_speed, lid, ts, [v], ["m/min"], self.update_speed, self.delete_speed)
+            row = EntryRow(self.scroll_temp, lid, ts, [v], ["°C"], lambda lid, vals: self.db.update_temp_log(lid, vals[0]), self.delete_temp)
             row.pack(fill="x", pady=2)
 
-    def update_tech(self, lid, values):
-        self.db.update_hildegard_log(lid, values[0], values[1])
-        self.refresh_tech()
+    def delete_temp(self, lid):
+        if messagebox.askyesno("Borrar", "¿Eliminar este registro de Temperatura?"):
+            self.db.delete_temp_log(lid); self.refresh_temp()
 
-    def delete_tech(self, lid):
-        if messagebox.askyesno("Borrar", "¿Eliminar este registro de Termoformado?"):
-            self.db.delete_hildegard_log(lid)
-            self.refresh_tech()
+    def refresh_press(self):
+        for widget in self.scroll_press.winfo_children(): widget.destroy()
+        logs = self.db.get_pressure_logs()
+        for lid, ts, v, notes in logs:
+            row = EntryRow(self.scroll_press, lid, ts, [v], ["PSI"], lambda lid, vals: self.db.update_pressure_log(lid, vals[0]), self.delete_press)
+            row.pack(fill="x", pady=2)
 
-    def update_speed(self, lid, values):
-        self.db.update_hildegard_speed(lid, values[0])
-        self.refresh_speed()
+    def delete_press(self, lid):
+        if messagebox.askyesno("Borrar", "¿Eliminar este registro de Presión?"):
+            self.db.delete_pressure_log(lid); self.refresh_press()
 
-    def delete_speed(self, lid):
-        if messagebox.askyesno("Borrar", "¿Eliminar este registro de Rapidez?"):
-            self.db.delete_hildegard_speed(lid)
-            self.refresh_speed()
+    def refresh_rpm(self):
+        for widget in self.scroll_rpm.winfo_children(): widget.destroy()
+        logs = self.db.get_rpm_logs()
+        for lid, ts, v, notes in logs:
+            row = EntryRow(self.scroll_rpm, lid, ts, [v], ["RPM"], lambda lid, vals: self.db.update_rpm_log(lid, vals[0]), self.delete_rpm)
+            row.pack(fill="x", pady=2)
+
+    def delete_rpm(self, lid):
+        if messagebox.askyesno("Borrar", "¿Eliminar este registro de RPM?"):
+            self.db.delete_rpm_log(lid); self.refresh_rpm()
+
+    def refresh_diameter(self):
+        for widget in self.scroll_diam.winfo_children(): widget.destroy()
+        logs = self.db.get_diameter_logs()
+        for lid, ts, diam, metraje, notes in logs:
+            row = EntryRow(self.scroll_diam, lid, ts, [diam], ["mm"], 
+                           lambda lid, vals: self.db.update_diameter_log(lid, vals[0], 0.0), self.delete_diameter)
+            row.pack(fill="x", pady=2)
+
+    def delete_diameter(self, lid):
+        if messagebox.askyesno("Borrar", "¿Eliminar este registro de Diámetro?"):
+            self.db.delete_diameter_log(lid); self.refresh_diameter()
 
     def clear_all_logs(self):
-        if messagebox.askyesno("Confirmar", "¿Borrar TODO el historial de Hildegard 2.0?"):
-            self.db.clear_hildegard_logs()
-            self.db.clear_hildegard_speed_logs()
-            self.refresh_all()
+        if messagebox.askyesno("Confirmar", "¿Borrar TODO el historial modular?"):
+            self.db.clear_modular_logs(); self.refresh_all()
 
 class EntryRow(ctk.CTkFrame):
     def __init__(self, master, entry_id, ts, values, units, on_save, on_delete):
@@ -147,23 +197,14 @@ class EntryRow(ctk.CTkFrame):
         
         dt = datetime.fromisoformat(ts).strftime("%H:%M")
         ctk.CTkLabel(self, text=f"[{dt}]", font=("Consolas", 10), text_color=TEXT_S).pack(side="left", padx=10)
-        
         self.container = ctk.CTkFrame(self, fg_color="transparent")
         self.container.pack(side="left", fill="x", expand=True)
-        
-        self.labels = []
-        self.entries = []
-        
         self.show_view()
 
     def show_view(self):
         for w in self.container.winfo_children(): w.destroy()
-        self.labels = []
         for i, v in enumerate(self.values):
-            lbl = ctk.CTkLabel(self.container, text=f"{v}{self.units[i]}", font=("Segoe UI", 11, "bold"), text_color=TEXT_P)
-            lbl.pack(side="left", padx=10)
-            self.labels.append(lbl)
-            
+            ctk.CTkLabel(self.container, text=f"{v}{self.units[i]}", font=("Segoe UI", 11, "bold"), text_color=TEXT_P).pack(side="left", padx=10)
         ctk.CTkButton(self, text="✏️", width=30, height=30, fg_color="transparent", hover_color="#334155", command=self.show_edit).pack(side="right", padx=5)
         ctk.CTkButton(self, text="🗑️", width=30, height=30, fg_color="transparent", hover_color=DANGER_P, command=lambda: self.on_delete(self.entry_id)).pack(side="right", padx=5)
 
@@ -171,20 +212,16 @@ class EntryRow(ctk.CTkFrame):
         for w in self.container.winfo_children(): w.destroy()
         for w in self.winfo_children(): 
             if isinstance(w, ctk.CTkButton): w.destroy()
-            
         self.entries = []
         for i, v in enumerate(self.values):
-            ent = ctk.CTkEntry(self.container, width=60, height=25, font=("Segoe UI", 10))
-            ent.insert(0, str(v))
-            ent.pack(side="left", padx=5)
+            ent = ctk.CTkEntry(self.container, width=60, height=25)
+            ent.insert(0, str(v)); ent.pack(side="left", padx=5)
             self.entries.append(ent)
-            ctk.CTkLabel(self.container, text=self.units[i], font=("Segoe UI", 9), text_color=TEXT_S).pack(side="left")
-
         ctk.CTkButton(self, text="💾", width=30, height=30, fg_color=ACCENT_GREEN, command=self.save_edit).pack(side="right", padx=5)
         ctk.CTkButton(self, text="❌", width=30, height=30, fg_color="#475569", command=self.show_view).pack(side="right", padx=5)
 
     def save_edit(self):
         try:
             new_vals = [float(e.get()) for e in self.entries]
-            self.on_save(self.entry_id, new_vals)
+            self.on_save(self.entry_id, new_vals); self.show_view()
         except ValueError: messagebox.showerror("Error", "Valores inválidos")

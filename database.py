@@ -97,22 +97,38 @@ class DatabaseManager:
                 )
             ''')
             
-            # Hildegard 2.0 Logs Table
+            
+            # Hildegard Modular Tables
             cursor.execute('''
-                CREATE TABLE IF NOT EXISTS hildegard_logs (
+                CREATE TABLE IF NOT EXISTS hildegard_temp_logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT,
                     temp REAL,
+                    notes TEXT
+                )
+            ''')
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS hildegard_pressure_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
                     pressure REAL,
                     notes TEXT
                 )
             ''')
-            # Hildegard 2.0 Speed Table
             cursor.execute('''
-                CREATE TABLE IF NOT EXISTS hildegard_speed_logs (
+                CREATE TABLE IF NOT EXISTS hildegard_rpm_logs (
                     id INTEGER PRIMARY KEY AUTOINCREMENT,
                     timestamp TEXT,
-                    speed REAL,
+                    rpm REAL,
+                    notes TEXT
+                )
+            ''')
+            cursor.execute('''
+                CREATE TABLE IF NOT EXISTS hildegard_diameter_logs (
+                    id INTEGER PRIMARY KEY AUTOINCREMENT,
+                    timestamp TEXT,
+                    diameter REAL,
+                    length_m REAL,
                     notes TEXT
                 )
             ''')
@@ -132,67 +148,114 @@ class DatabaseManager:
             """, (datetime.now().isoformat(), duration, operator, status, material, temp, rejects))
             conn.commit()
 
-    def log_hildegard(self, temp, pressure, notes=""):
+    # --- HILDEGARD MODULAR LOGS ---
+    def log_temp(self, temp, notes=""):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO hildegard_logs (timestamp, temp, pressure, notes) VALUES (?, ?, ?, ?)",
-                           (datetime.now().isoformat(), temp, pressure, notes))
+            cursor.execute("INSERT INTO hildegard_temp_logs (timestamp, temp, notes) VALUES (?, ?, ?)",
+                           (datetime.now().isoformat(), temp, notes))
             conn.commit()
 
-    def get_hildegard_logs(self):
+    def get_temp_logs(self):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("SELECT * FROM hildegard_logs ORDER BY id DESC")
+            cursor.execute("SELECT * FROM hildegard_temp_logs ORDER BY id DESC")
             return cursor.fetchall()
 
-    def update_hildegard_log(self, entry_id, temp, pressure):
+    def update_temp_log(self, entry_id, temp):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("UPDATE hildegard_logs SET temp = ?, pressure = ? WHERE id = ?", (temp, pressure, entry_id))
+            cursor.execute("UPDATE hildegard_temp_logs SET temp = ? WHERE id = ?", (temp, entry_id))
             conn.commit()
 
-    def delete_hildegard_log(self, entry_id):
+    def delete_temp_log(self, entry_id):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM hildegard_logs WHERE id = ?", (entry_id,))
+            cursor.execute("DELETE FROM hildegard_temp_logs WHERE id = ?", (entry_id,))
             conn.commit()
 
-    def clear_hildegard_logs(self):
+    def log_pressure(self, pressure, notes=""):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM hildegard_logs")
+            cursor.execute("INSERT INTO hildegard_pressure_logs (timestamp, pressure, notes) VALUES (?, ?, ?)",
+                           (datetime.now().isoformat(), pressure, notes))
             conn.commit()
 
-    # Speed Logs
-    def log_hildegard_speed(self, speed):
+    def get_pressure_logs(self):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("INSERT INTO hildegard_speed_logs (timestamp, speed) VALUES (?, ?)",
-                           (datetime.now().isoformat(), speed))
-            conn.commit()
-
-    def get_hildegard_speed_logs(self):
-        with self.get_connection() as conn:
-            cursor = conn.cursor()
-            cursor.execute("SELECT * FROM hildegard_speed_logs ORDER BY id DESC")
+            cursor.execute("SELECT * FROM hildegard_pressure_logs ORDER BY id DESC")
             return cursor.fetchall()
 
-    def update_hildegard_speed(self, entry_id, speed):
+    def update_pressure_log(self, entry_id, pressure):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("UPDATE hildegard_speed_logs SET speed = ? WHERE id = ?", (speed, entry_id))
+            cursor.execute("UPDATE hildegard_pressure_logs SET pressure = ? WHERE id = ?", (pressure, entry_id))
             conn.commit()
 
-    def delete_hildegard_speed(self, entry_id):
+    def delete_pressure_log(self, entry_id):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM hildegard_speed_logs WHERE id = ?", (entry_id,))
+            cursor.execute("DELETE FROM hildegard_pressure_logs WHERE id = ?", (entry_id,))
             conn.commit()
 
-    def clear_hildegard_speed_logs(self):
+    def log_rpm(self, rpm, notes=""):
         with self.get_connection() as conn:
             cursor = conn.cursor()
-            cursor.execute("DELETE FROM hildegard_speed_logs")
+            cursor.execute("INSERT INTO hildegard_rpm_logs (timestamp, rpm, notes) VALUES (?, ?, ?)",
+                           (datetime.now().isoformat(), rpm, notes))
+            conn.commit()
+
+    def get_rpm_logs(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM hildegard_rpm_logs ORDER BY id DESC")
+            return cursor.fetchall()
+
+    def update_rpm_log(self, entry_id, rpm):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE hildegard_rpm_logs SET rpm = ? WHERE id = ?", (rpm, entry_id))
+            conn.commit()
+
+    def delete_rpm_log(self, entry_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM hildegard_rpm_logs WHERE id = ?", (entry_id,))
+            conn.commit()
+
+    def log_diameter(self, diameter, length_m, notes=""):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("INSERT INTO hildegard_diameter_logs (timestamp, diameter, length_m, notes) VALUES (?, ?, ?, ?)",
+                           (datetime.now().isoformat(), diameter, length_m, notes))
+            conn.commit()
+
+    def get_diameter_logs(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("SELECT * FROM hildegard_diameter_logs ORDER BY id DESC")
+            return cursor.fetchall()
+
+    def update_diameter_log(self, entry_id, diameter, length_m):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE hildegard_diameter_logs SET diameter = ?, length_m = ? WHERE id = ?", (diameter, length_m, entry_id))
+            conn.commit()
+
+    def delete_diameter_log(self, entry_id):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM hildegard_diameter_logs WHERE id = ?", (entry_id,))
+            conn.commit()
+
+    def clear_modular_logs(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM hildegard_temp_logs")
+            cursor.execute("DELETE FROM hildegard_pressure_logs")
+            cursor.execute("DELETE FROM hildegard_rpm_logs")
+            cursor.execute("DELETE FROM hildegard_diameter_logs")
             conn.commit()
 
     def get_full_history(self):
@@ -200,6 +263,31 @@ class DatabaseManager:
             cursor = conn.cursor()
             cursor.execute("SELECT * FROM production_cycles ORDER BY id DESC")
             return cursor.fetchall()
+            
+    def update_latest_cycle_defects(self, defects):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE production_cycles SET reject_count = ? WHERE id = (SELECT MAX(id) FROM production_cycles)", (defects,))
+            conn.commit()
+
+    def update_cycle(self, cid, operator, duration, defects):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("UPDATE production_cycles SET operator = ?, duration = ?, reject_count = ? WHERE id = ?", (operator, duration, defects, cid))
+            conn.commit()
+
+    def delete_cycle(self, cid):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM production_cycles WHERE id = ?", (cid,))
+            conn.commit()
+
+    def clear_all_cycles(self):
+        with self.get_connection() as conn:
+            cursor = conn.cursor()
+            cursor.execute("DELETE FROM production_cycles")
+            conn.commit()
+
             
     def get_doe_data(self):
         with self.get_connection() as conn:

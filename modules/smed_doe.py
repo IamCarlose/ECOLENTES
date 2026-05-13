@@ -20,63 +20,90 @@ class SMEDModule(ctk.CTkFrame):
         self.table.pack(fill="both", expand=True, padx=15, pady=15)
         self.table.add_row(["Set-up Molde", "Interna", "15 min", "--"])
 
+from matplotlib.figure import Figure
+from matplotlib.backends.backend_tkagg import FigureCanvasTkAgg
+import numpy as np
+
 class DOEModule(ctk.CTkFrame):
-    def __init__(self, master, **kwargs):
+    def __init__(self, master, db_manager, **kwargs):
         super().__init__(master, fg_color="transparent", **kwargs)
+        self.db = db_manager
         
-        # Refined Control Panel
-        ctrl = ctk.CTkFrame(self, fg_color=PANEL_BG, corner_radius=20, border_width=1, border_color="#334155")
-        ctrl.pack(fill="x", padx=10, pady=10)
+        # Header
+        header = ctk.CTkFrame(self, fg_color=PANEL_BG, corner_radius=20, border_width=1, border_color="#334155")
+        header.pack(fill="x", padx=10, pady=10)
+        ctk.CTkLabel(header, text="📈 ENGINEERING DOE & STATISTICAL DASHBOARD", font=("Segoe UI", 18, "bold"), text_color=ACCENT_BLUE).pack(side="left", padx=30, pady=25)
         
-        ctk.CTkLabel(ctrl, text="DISEÑO DE EXPERIMENTOS (DOE)", font=("Segoe UI", 18, "bold"), text_color=ACCENT_BLUE).pack(side="left", padx=30, pady=25)
-        
-        entry_box = ctk.CTkFrame(ctrl, fg_color="transparent")
-        entry_box.pack(side="left", padx=20)
-        ctk.CTkLabel(entry_box, text="CANT. CORRIDAS (N):", font=("Segoe UI", 10, "bold"), text_color=TEXT_S).pack(side="left", padx=5)
-        self.n_val = ctk.CTkEntry(entry_box, width=60, placeholder_text="4", fg_color=BG_MAIN)
-        self.n_val.pack(side="left")
-        self.n_val.insert(0, "4")
-        
-        self.btn_gen = ctk.CTkButton(ctrl, text="GENERAR MATRIZ MUESTRAL", fg_color=ACCENT_BLUE, text_color=TEXT_P, font=("Segoe UI", 11, "bold"), width=250, height=45, command=self.build_matrix)
-        self.btn_gen.pack(side="left", padx=10)
+        btn_refresh = ctk.CTkButton(header, text="🔄 ACTUALIZAR GRÁFICOS", fg_color=ACCENT_BLUE, text_color=BG_MAIN, font=("Segoe UI", 11, "bold"), width=150, height=35, command=self.plot_graphs)
+        btn_refresh.pack(side="right", padx=30)
 
-        # Added: Manual Add Row Button
-        self.btn_add = ctk.CTkButton(ctrl, text="+ AÑADIR FILA", fg_color="transparent", border_width=1, border_color=ACCENT_BLUE, text_color=TEXT_P, font=("Segoe UI", 10, "bold"), width=120, height=45, command=lambda: self.table.add_row(["", "-", "-", ""]))
-        self.btn_add.pack(side="right", padx=30)
+        # Matplotlib Figure Container
+        self.chart_container = ctk.CTkFrame(self, fg_color=PANEL_BG, corner_radius=25, border_width=1, border_color="#334155")
+        self.chart_container.pack(fill="both", expand=True, padx=10, pady=10)
 
-        # Success Message (Hidden by default)
-        self.msg = ctk.CTkLabel(self, text="", font=("Segoe UI", 11), text_color=ACCENT_GREEN)
-        self.msg.pack(pady=5)
-
-        self.t_container = ctk.CTkFrame(self, fg_color=PANEL_BG, corner_radius=25, border_width=1, border_color="#334155")
-        self.t_container.pack(fill="both", expand=True, padx=10, pady=10)
+        self.fig = Figure(figsize=(12, 8), dpi=100, facecolor=PANEL_BG)
+        self.canvas = FigureCanvasTkAgg(self.fig, master=self.chart_container)
+        self.canvas.get_tk_widget().pack(fill="both", expand=True, padx=15, pady=15)
         
-        self.table = EditableTable(self.t_container, columns=["Corrida", "Factor A", "Factor B", "Respuesta"], height=500)
-        self.table.pack(fill="both", expand=True, padx=15, pady=15)
+        self.plot_graphs()
 
-    def build_matrix(self):
-        try:
-            n = int(self.n_val.get())
-            if n < 1 or n > 50: raise ValueError
-        except:
-            self.msg.configure(text="Error: Ingrese un valor de N válido (1-50)", text_color=DANGER_P)
-            return
+    def plot_graphs(self):
+        self.fig.clf()
+        
+        # Grid layout for subplots
+        ax1 = self.fig.add_subplot(221) # X-R Chart
+        ax2 = self.fig.add_subplot(222) # Histogram
+        ax3 = self.fig.add_subplot(212) # Scatter Plot
+        
+        for ax in [ax1, ax2, ax3]:
+            ax.set_facecolor(PANEL_BG)
+            ax.tick_params(colors=TEXT_S)
+            for spine in ax.spines.values():
+                spine.set_color('#E2E8F0')
 
-        # Let's keep a standard DOE header for ease of use
-        cols = ["ORDEN", "FACTOR A", "FACTOR B", "RESPUESTA (Y)"]
-        self.table.reset_table(cols)
+        # --- Data Fetching ---
+        d_logs = self.db.get_diameter_logs()
+        diameters = [log[2] for log in d_logs][::-1] # Reverse for chronological order
         
-        for i in range(n):
-            # Try to populate with some default pattern for first 2 factors if N=4
-            row = [str(i+1)]
-            if n == 4: # Classic 2^2 hint
-                a = "+" if i in [1, 3] else "-"
-                b = "+" if i in [2, 3] else "-"
-                row.extend([a, b])
-            else:
-                row.extend(["-", "-"]) # Default blanks
-            row.append("") 
-            self.table.add_row(row)
+        t_logs = self.db.get_temp_logs()
+        r_logs = self.db.get_rpm_logs()
+        temps = [log[2] for log in t_logs]
+        rpms = [log[2] for log in r_logs]
         
-        self.msg.configure(text=f"✓ Se han generado {n} corridas experimentales.", text_color=ACCENT_GREEN)
-        self.update_idletasks()
+        # --- 1. X-R (Individuals) Control Chart: Diameter vs Time ---
+        ax1.set_title("Gráfico de Control: Diámetro vs Tiempo", color=TEXT_P, fontsize=10, weight='bold')
+        if diameters:
+            ax1.plot(diameters, marker='o', color=ACCENT_BLUE, linestyle='-', markersize=4)
+            ax1.axhline(NOMINAL_DIAMETER, color=ACCENT_GREEN, linestyle='--', label='Nominal')
+            ax1.axhline(USL_DIAMETER, color=DANGER_P, linestyle=':', label='USL')
+            ax1.axhline(LSL_DIAMETER, color=DANGER_P, linestyle=':', label='LSL')
+            ax1.legend(loc='upper right', fontsize=8)
+        else:
+            ax1.text(0.5, 0.5, "Sin Datos", ha='center', va='center', color=TEXT_S)
+
+        # --- 2. Histogram: Diameter Distribution ---
+        ax2.set_title("Histograma de Distribución de Diámetro", color=TEXT_P, fontsize=10, weight='bold')
+        if diameters:
+            ax2.hist(diameters, bins=10, color=ACCENT_GREEN, alpha=0.7, edgecolor='white')
+            ax2.axvline(NOMINAL_DIAMETER, color=TEXT_P, linestyle='dashed', linewidth=1)
+        else:
+            ax2.text(0.5, 0.5, "Sin Datos", ha='center', va='center', color=TEXT_S)
+
+        # --- 3. Scatter Plot: Temp vs RPM ---
+        ax3.set_title("Correlación: Temperatura (Boquilla) vs Velocidad Tracción (RPM)", color=TEXT_P, fontsize=10, weight='bold')
+        min_len = min(len(temps), len(rpms))
+        if min_len > 0:
+            # Pair sequentially for demonstration
+            ax3.scatter(temps[:min_len], rpms[:min_len], color=ACCENT_GOLD, alpha=0.8, edgecolors='w', s=50)
+            ax3.set_xlabel("Temperatura (°C)", color=TEXT_S, fontsize=9)
+            ax3.set_ylabel("RPM", color=TEXT_S, fontsize=9)
+            
+            # Trendline
+            z = np.polyfit(temps[:min_len], rpms[:min_len], 1)
+            p = np.poly1d(z)
+            ax3.plot(temps[:min_len], p(temps[:min_len]), color=DANGER_P, linestyle="--", alpha=0.5)
+        else:
+            ax3.text(0.5, 0.5, "Datos Insuficientes para Correlación", ha='center', va='center', color=TEXT_S)
+
+        self.fig.tight_layout()
+        self.canvas.draw()

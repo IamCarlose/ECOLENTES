@@ -79,36 +79,39 @@ class LoginModule(ctk.CTkFrame):
         # Logo
         if os.path.exists(LOGO_IMG):
             logo_pil = Image.open(LOGO_IMG)
-            self.logo_img = ctk.CTkImage(logo_pil, size=(140, 140))
-            ctk.CTkLabel(self.card, image=self.logo_img, text="").pack(pady=(50, 10))
+            # Slightly more compact to ensure bottom link visibility
+            self.logo_img = ctk.CTkImage(logo_pil, size=(380, 190))
+            ctk.CTkLabel(self.card, image=self.logo_img, text="").pack(pady=(25, 5))
 
         title = "INICIAR SESIÓN" if self.mode == "login" else "CREAR CUENTA"
         ctk.CTkLabel(self.card, text=title, font=("Segoe UI", 28, "bold"), text_color=TEXT_P).pack()
         
         # Premium Branding Title
-        ctk.CTkLabel(self.card, text="ECOLENTES", font=("Segoe UI", 48, "bold"), text_color=ACCENT_BLUE).pack(pady=(10, 0))
-        ctk.CTkLabel(self.card, text="INDUSTRIAL OS PRO", font=("Segoe UI", 12, "bold"), text_color=TEXT_S).pack(pady=(0, 30))
+        if not os.path.exists(LOGO_IMG):
+            ctk.CTkLabel(self.card, text="ECOLENS APP", font=("Segoe UI", 48, "bold"), text_color=ACCENT_BLUE).pack(pady=(10, 0))
+            
+        ctk.CTkLabel(self.card, text="INDUSTRIAL OS PRO", font=("Segoe UI", 12, "bold"), text_color=TEXT_S).pack(pady=(0, 15))
 
-        # Form
+        # Form with tighter spacing
         self.u_entry = ctk.CTkEntry(self.card, placeholder_text="Usuario", width=350, height=50, fg_color=BG_MAIN, border_color="#E2E8F0")
-        self.u_entry.pack(pady=10)
+        self.u_entry.pack(pady=5)
         
         self.p_entry = ctk.CTkEntry(self.card, placeholder_text="Contraseña", show="*", width=350, height=50, fg_color=BG_MAIN, border_color="#E2E8F0")
-        self.p_entry.pack(pady=10)
+        self.p_entry.pack(pady=5)
 
-        self.role_m = ctk.CTkOptionMenu(self.card, values=["Operario", "Ingeniero"], fg_color=ACCENT_BLUE, button_color=ACCENT_BLUE, width=350, height=45)
-        self.role_m.pack(pady=20)
+        self.role_m = ctk.CTkOptionMenu(self.card, values=["Operario", "Ingeniero", "Supervisor"], fg_color=ACCENT_BLUE, button_color=ACCENT_BLUE, width=350, height=45)
+        self.role_m.pack(pady=10)
 
         btn_text = "ACCEDER AL TERMINAL" if self.mode == "login" else "REGISTRAR USUARIO"
         btn_color = ACCENT_GREEN if self.mode == "login" else ACCENT_BLUE
         
         self.action_b = ctk.CTkButton(self.card, text=btn_text, font=("Segoe UI", 14, "bold"), fg_color=btn_color, text_color=PANEL_BG, width=350, height=55, command=self.handle_action)
-        self.action_b.pack(pady=10)
+        self.action_b.pack(pady=5)
 
         # Toggle Link
         toggle_text = "¿No tienes cuenta? Regístrate" if self.mode == "login" else "Ya tengo cuenta, iniciar sesión"
         self.toggle_btn = ctk.CTkButton(self.card, text=toggle_text, font=("Segoe UI", 11), fg_color="transparent", text_color=TEXT_S, hover_color=BG_MAIN, command=self.toggle_mode)
-        self.toggle_btn.pack(pady=20)
+        self.toggle_btn.pack(pady=5)
 
         self.msg = ctk.CTkLabel(self.card, text="", font=("Segoe UI", 11))
         self.msg.pack()
